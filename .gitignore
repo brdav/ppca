@@ -1,0 +1,18 @@
+# ignore IDE files
+*.pyc
+*.swp
+.idea/
+.vscode/
+__pycache__/
+*.egg-info/
+
+# extra module
+build/
+dist/
+.ninja*
+build.ninja
+*.so
+*.o
+
+# jupyter
+.ipynb_checkpoints/
