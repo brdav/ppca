@@ -206,8 +206,7 @@ class EMPPCA:
         return self
 
     def fit_transform(self, X: np.array):
-        self.fit(X)
-        return self.transformed_values_
+        return self.fit(X).transformed_values_
 
     def _em_complete(self, X: np.array):
         n_features, n_samples = X.shape
