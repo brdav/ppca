@@ -40,7 +40,7 @@ print("principle components: ", em_ppca.components_)
 
 The current implementation supports all attributes, but only the `fit` and `fit_transform` methods compared to the `sklearn` counterpart. Feedback / contributions are welcome!
 
-# References
+## References
 
 [1] Bishop, C. M., Pattern Recognition and Machine Learning. New York: Springer, 2006.
 
