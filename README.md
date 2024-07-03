@@ -6,6 +6,8 @@ PPCA is a probabilistic latent variable model, whose maximum likelihood solution
 
 This implementation uses the expectation-maximization (EM) algorithm to find maximum-likelihood estimates of the PPCA model parameters. This enables a principled handling of missing values in the dataset. In this implementation, we use `p(X_obs, Z)` as the complete-data likelihood, where `X_obs` denotes the non-missing entries in the data `X`, and `Z` denotes the latent variables (see [4]).
 
+This implementation was tested for correctness against the [MATLAB ppca function](https://mathworks.com/help/stats/ppca.html).
+
 ## Requirements
 
 This implementation uses `numba` (in addition to `numpy`) to accelerate the EM algorithm in the presence of missing values. It was tested with Python 3.12 and can be installed as a package with:

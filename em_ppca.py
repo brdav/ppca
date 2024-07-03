@@ -12,7 +12,7 @@ class EMPPCA:
     enables a principled handling of missing values in the dataset. In this
     implementation, we use p(X_obs, Z) as the complete-data likelihood,
     where X_obs denotes the non-missing entries in the data X, and Z
-    denotes the latent variables.
+    denotes the latent variables (see [4]).
 
     Parameters:
 
@@ -125,7 +125,7 @@ class EMPPCA:
 
     def fit(self, X: np.array):
 
-        # This implementation uses column observation vector
+        # Code expects X as (n_features, n_samples)
         X = X.T
 
         n_features, n_samples = X.shape
@@ -154,24 +154,26 @@ class EMPPCA:
                 )
             Z, W, mu, sig2 = self._em_complete(X)
 
+        # Reconstruct X from latent space
         WTW = W.T @ W
-        X_hat = W @ np.linalg.inv(WTW) @ (WTW + sig2 * np.eye(self.n_components)) @ Z
-
-        diff = X - X_hat - mu[:, np.newaxis]
-        diff[~obs] = 0
-        rms_resid = np.linalg.norm(diff, "fro") / np.sqrt(np.sum(obs))
+        X_hat = (
+            W @ np.linalg.inv(WTW) @ (WTW + sig2 * np.eye(self.n_components)) @ Z
+            + mu[:, np.newaxis]
+        )
 
         if self.verbose:
-            print("Root mean square residual = {}.".format(rms_resid))
+            diff = X - X_hat
+            diff[~obs] = 0
+            rms_resid = np.linalg.norm(diff, "fro") / np.sqrt(np.sum(obs))
+            print("Root mean square reconstruction error = {}.".format(rms_resid))
 
-        # Orthogonalize W to the standard PCA basis
+        # Rotate W to the standard PCA basis
         W = np.linalg.svd(W, full_matrices=False)[0]
-        scores = X_hat.T @ W
+        scores = (X_hat.T - mu[np.newaxis, :]) @ W
         latent = np.linalg.eig(scores.T @ scores)[0]
         latent = np.sort(latent)[::-1] / (n_samples - 1)
 
-        # Sign convention on the principle components: the largest element in
-        # each component will have a positive sign.
+        # The largest element in each principle component will have a positive sign.
         max_abs_u_cols = np.argmax(np.abs(W), axis=0)
         shift = np.arange(W.shape[1])
         indices = max_abs_u_cols + shift * W.shape[0]
@@ -215,7 +217,6 @@ class EMPPCA:
         sig2 = np.random.randn()
         nll = np.inf
 
-        # Subtract mu in the beginning
         X -= mu[:, np.newaxis]
 
         if self.verbose:
@@ -240,12 +241,11 @@ class EMPPCA:
             )
             sig2_new = (traceS - np.trace(SW @ M_inv @ W_new.T)) / n_features
 
-            dw = np.max(
-                np.abs(W - W_new)
-                / (np.sqrt(np.finfo(float).eps) + np.max(np.abs(W_new)))
+            dW = np.max(
+                np.abs(W - W_new) / (np.sqrt(np.finfo(float).eps) + np.max(np.abs(W)))
             )
-            dv = np.abs(sig2 - sig2_new) / (np.finfo(float).eps + abs(sig2))
-            delta = max(dw, dv)
+            dsig2 = np.abs(sig2 - sig2_new) / (np.finfo(float).eps + abs(sig2))
+            delta = max(dW, dsig2)
 
             nll_new = self._compute_nll(
                 X, W_new, sig2_new, n_samples, n_features, self.n_components
@@ -255,14 +255,12 @@ class EMPPCA:
             sig2 = sig2_new
 
             if self.verbose and (itercount % 20 == 0):
-                print(strfmt.format(itercount, sig2, dw, nll_new))
+                print(strfmt.format(itercount, sig2, dW, nll_new))
 
             if itercount > self.min_iter:
                 if delta < self.tol_delta:
                     break
                 elif (nll - nll_new) < self.tol_nll:
-                    break
-                elif np.abs(sig2_new) < np.sqrt(np.finfo(float).eps):
                     break
 
             nll = nll_new
@@ -298,12 +296,10 @@ class EMPPCA:
         while itercount < self.max_iter:
             itercount += 1
 
-            # E-Step
             Z, C = self._e_step_missing(
                 X, W, mu, sig2, obs, n_samples, self.n_components
             )
 
-            # M-Step
             W_new, mu_new, sig2_new = self._m_step_missing(
                 X,
                 Z,
@@ -316,17 +312,15 @@ class EMPPCA:
                 self.n_components,
             )
 
-            # Compute complete-data negative log-likelihood
             nll_new = self._compute_nll_missing(
                 X, W_new, mu_new, sig2_new, obs, n_samples, self.n_components
             )
 
-            dw = np.max(
-                np.abs(W - W_new)
-                / (np.sqrt(np.finfo(float).eps) + np.max(np.abs(W_new)))
+            dW = np.max(
+                np.abs(W - W_new) / (np.sqrt(np.finfo(float).eps) + np.max(np.abs(W)))
             )
-            dv = np.abs(sig2 - sig2_new) / (np.finfo(float).eps + sig2)
-            delta = max(dw, dv)
+            dsig2 = np.abs(sig2 - sig2_new) / (np.finfo(float).eps + sig2)
+            delta = max(dW, dsig2)
 
             W = W_new.copy()
             mu = mu_new.copy()
@@ -341,7 +335,7 @@ class EMPPCA:
             nll = nll_new
 
             if self.verbose and (itercount % 20 == 0):
-                print(strfmt.format(itercount, sig2, dw, nll))
+                print(strfmt.format(itercount, sig2, dW, nll))
 
             if itercount == self.max_iter:
                 raise RuntimeError(
@@ -350,7 +344,6 @@ class EMPPCA:
                     )
                 )
 
-        # Center Z and update mu
         mu_Z = np.mean(Z, axis=1)
         Z -= mu_Z[:, np.newaxis]
         mu += W @ mu_Z
@@ -421,7 +414,6 @@ class EMPPCA:
         mu_new = np.empty(n_features)
         W_new = np.zeros((n_features, n_components))
 
-        # Update mu and W
         resid = X - W @ Z
         for i in nb.prange(n_features):
             mu_new[i] = np.nanmean(resid[i, :])
@@ -432,7 +424,6 @@ class EMPPCA:
             ww = Z[:, idx_obs] @ (X[i, idx_obs] - mu_new[i])
             W_new[i, :] = np.linalg.solve(M, ww)
 
-        # Update sig2
         sig2_sum = 0
         for j in nb.prange(n_samples):
             w_new = W_new[obs[:, j], :]
