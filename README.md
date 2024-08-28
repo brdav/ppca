@@ -42,7 +42,7 @@ Most implementations on Github for PCA with missing values use the EM imputation
 
 References [1] and [2] provide derivations and detailed discussions of the model and its optimization with EM, however, the missing value case is not explained in detail. Therefore, the necessary equations are provided here in compact form. Familiarity with [1] and [2] is assumed.
 
-First, note that we can simply integrate out missing values from the marginal likelihood. Let $\mathbf{x}_n^\text{m}$ denote the missing entries of observation $\mathbf{x}_n$ and $\mathbf{x}_n^\text{o}$ the observed entries.
+First, note that we can simply integrate out missing values from the marginal likelihood. Let $`\mathbf{x}_n^\text{m}`$ denote the missing entries of observation $`\mathbf{x}_n`$ and $`\mathbf{x}_n^\text{o}`$ the observed entries.
 
 ```math
 p(\mathbf{X}|\mathbf{\mu}, \mathbf{W}, \sigma^2) = \prod_{n=1}^N \int p(\mathbf{z}_n) p(\mathbf{x}_n | \mathbf{z}_n, \mathbf{\mu}, \mathbf{W}, \sigma^2) \text{d}\mathbf{z}_n
@@ -54,13 +54,13 @@ p(\mathbf{X}|\mathbf{\mu}, \mathbf{W}, \sigma^2) = \prod_{n=1}^N \int p(\mathbf{
 = \prod_{n=1}^N p(\mathbf{x}_n^\text{o}|\mathbf{\mu}, \mathbf{W}, \sigma^2)
 ```
 
-Note that $\mathbf{w}_i^\text{T}$ is the $i$-th row of $\mathbf{W}$. From this equation we can already see that the maximum likelihood estimate of $\mathbf{\mu}$ is given by:
+Note that $`\mathbf{w}_i^\text{T}`$ is the $`i`$-th row of $`\mathbf{W}`$. From this equation we can already see that the maximum likelihood estimate of $`\mathbf{\mu}`$ is given by:
 
 ```math
 \mathbf{\mu}_{\text{ML}} = \frac{1}{\sum_{m=1}^N \iota_{mi}} \sum_{n=1}^N\iota_{ni} x_{ni}
 ```
 
-$\iota_{ni}$ are indicator variables which are 1 if $x_{ni}$ is observed and 0 otherwise. Estimating $\mathbf{W}_{\text{ML}}$ and $\sigma_{\text{ML}}^2$ is more complicated and we have to resort to the EM algorithm.
+$`\iota_{ni}`$ are indicator variables which are 1 if $`x_{ni}`$ is observed and 0 otherwise. Estimating $`\mathbf{W}_\text{ML}`$ and $`\sigma_\text{ML}^2`$ is more complicated and we have to resort to the EM algorithm.
 
 The expectation of the complete-data log likelihood w.r.t. the latent variables is as follows:
 
@@ -80,7 +80,7 @@ In the E-step, we estimate the sufficient statistics of the latent posterior:
 \mathbb{E} [\mathbf{z}_n \mathbf{z}_n^\text{T}] = \sigma^2 \mathbf{M}_n^{-1} + \mathbb{E}[\mathbf{z}_n] \mathbb{E}[\mathbf{z}_n]^\text{T}
 ```
 
-where $\mathbf{y}_n$ contains the observed elements of $\mathbf{x}_n$ minus the corresponding elements of $\mathbf{\mu}_\text{ML}$, $\mathbf{W}_n$ is the matrix formed by the rows of $\mathbf{W}$ corresponding to observed elements in $\mathbf{x}_n$, and $\mathbf{M}_n = \mathbf{W}_n^\text{T} \mathbf{W}_n + \sigma^2 \mathbf{I}$.
+where $`\mathbf{y}_n`$ contains the observed elements of $`\mathbf{x}_n`$ minus the corresponding elements of $`\mathbf{\mu}_\text{ML}`$, $`\mathbf{W}_n`$ is the matrix formed by the rows of $`\mathbf{W}`$ corresponding to observed elements in $`\mathbf{x}_n`$, and $`\mathbf{M}_n = \mathbf{W}_n^\text{T} \mathbf{W}_n + \sigma^2 \mathbf{I}`$.
 
 In the M-step, we maximize the complete-data log likelihood while fixing the latent variable posterior.
 
