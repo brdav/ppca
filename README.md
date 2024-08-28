@@ -45,8 +45,12 @@ References [1] and [2] provide derivations and detailed discussions of the model
 First, note that we can simply integrate out missing values from the marginal likelihood. Let $\mathbf{x}_n^\text{m}$ denote the missing entries of observation $\mathbf{x}_n$ and $\mathbf{x}_n^\text{o}$ the observed entries.
 
 ```math
-p(\mathbf{X}|\mathbf{\mu}, \mathbf{W}, \sigma^2) = \prod_{n=1}^N \int p(\mathbf{z}_n) p(\mathbf{x}_n | \mathbf{z}_n, \mathbf{\mu}, \mathbf{W}, \sigma^2) \text{d}\mathbf{z}_n \\
-= \prod_{n=1}^N \int p(\mathbf{z}_n) \prod_{x_{ni} \in \mathbf{x}_n^\text{o}} \mathcal{N}(x_{ni}|\mathbf{w}_i^\text{T} \mathbf{z}_n + \mu_i, \sigma^2) \int \prod_{x_{nj} \in \mathbf{x}_n^\text{m}} \mathcal{N}(x_{nj} | \mathbf{w}_j^\text{T} \mathbf{z}_n + \mu_j, \sigma^2) \text{d}\mathbf{x}_n^\text{m} \text{d}\mathbf{z}_n \\
+p(\mathbf{X}|\mathbf{\mu}, \mathbf{W}, \sigma^2) = \prod_{n=1}^N \int p(\mathbf{z}_n) p(\mathbf{x}_n | \mathbf{z}_n, \mathbf{\mu}, \mathbf{W}, \sigma^2) \text{d}\mathbf{z}_n
+```
+```math
+= \prod_{n=1}^N \int p(\mathbf{z}_n) \prod_{x_{ni} \in \mathbf{x}_n^\text{o}} \mathcal{N}(x_{ni}|\mathbf{w}_i^\text{T} \mathbf{z}_n + \mu_i, \sigma^2) \int \prod_{x_{nj} \in \mathbf{x}_n^\text{m}} \mathcal{N}(x_{nj} | \mathbf{w}_j^\text{T} \mathbf{z}_n + \mu_j, \sigma^2) \text{d}\mathbf{x}_n^\text{m} \text{d}\mathbf{z}_n
+```
+```math
 = \prod_{n=1}^N p(\mathbf{x}_n^\text{o}|\mathbf{\mu}, \mathbf{W}, \sigma^2)
 ```
 
@@ -61,14 +65,18 @@ $\iota_{ni}$ are indicator variables which are 1 if $x_{ni}$ is observed and 0 o
 The expectation of the complete-data log likelihood w.r.t. the latent variables is as follows:
 
 ```math
-\mathbb{E} [\text{ln } p(\mathbf{X}, \mathbf{Z} | \mathbf{\mu}, \mathbf{W}, \sigma^2)] = \mathbb{E} [\sum_{n=1}^N \{ \text{ln }p(\mathbf{z}_n) + \sum_{i=1}^D \iota_{ni} \text{ln } \mathcal{N} (\mathbf{x}_{ni} | \mathbf{w}_i^\text{T} \mathbf{z}_n + \mu_i, \sigma^2)\}] \\
+\mathbb{E} [\text{ln } p(\mathbf{X}, \mathbf{Z} | \mathbf{\mu}, \mathbf{W}, \sigma^2)] = \mathbb{E} [\sum_{n=1}^N \{ \text{ln }p(\mathbf{z}_n) + \sum_{i=1}^D \iota_{ni} \text{ln } \mathcal{N} (\mathbf{x}_{ni} | \mathbf{w}_i^\text{T} \mathbf{z}_n + \mu_i, \sigma^2)\}]
+```
+```math
 = -\sum_{n=1}^N \{ \frac{M}{2} \text{ln }(2\pi) + \frac{1}{2} \text{Tr}(\mathbb{E}[\mathbf{z}_n \mathbf{z}_n^\text{T}]) + \sum_{i=1}^D \iota_{ni} \{ \frac{1}{2} \text{ln }(2\pi\sigma^2) + \frac{1}{2\sigma^2}(x_{ni} - \mu_i)^2 - \frac{1}{\sigma^2}\mathbb{E}[\mathbf{z}_n]^\text{T} \mathbf{w}_i (x_{ni} - \mu_i) + \frac{1}{2\sigma^2} \text{Tr}(\mathbb{E}[\mathbf{z}_n \mathbf{z}_n^\text{T}] \mathbf{w}_i \mathbf{w}_i^\text{T})\} \}
 ```
 
 In the E-step, we estimate the sufficient statistics of the latent posterior:
 
 ```math
-\mathbb{E} [\mathbf{z}_n] = \mathbf{M}_n^{-1} \mathbf{W}_n^\text{T} \mathbf{y}_n \\
+\mathbb{E} [\mathbf{z}_n] = \mathbf{M}_n^{-1} \mathbf{W}_n^\text{T} \mathbf{y}_n
+```
+```math
 \mathbb{E} [\mathbf{z}_n \mathbf{z}_n^\text{T}] = \sigma^2 \mathbf{M}_n^{-1} + \mathbb{E}[\mathbf{z}_n] \mathbb{E}[\mathbf{z}_n]^\text{T}
 ```
 
@@ -77,7 +85,9 @@ where $\mathbf{y}_n$ contains the observed elements of $\mathbf{x}_n$ minus the 
 In the M-step, we maximize the complete-data log likelihood while fixing the latent variable posterior.
 
 ```math
-\mathbf{W}_\text{new} = [\sum_{n=1}^N \mathbf{y}_n \mathbb{E}[\mathbf{z}_n]^\text{T}] [\sum_{n=1}^N \mathbb{E}[\mathbf{z}_n \mathbf{z}_n^\text{T}]]^{-1} \\
+\mathbf{W}_\text{new} = [\sum_{n=1}^N \mathbf{y}_n \mathbb{E}[\mathbf{z}_n]^\text{T}] [\sum_{n=1}^N \mathbb{E}[\mathbf{z}_n \mathbf{z}_n^\text{T}]]^{-1}
+```
+```math
 \sigma^2_\text{new} = \frac{1}{\sum_{n=1}^N \sum_{i=1}^D \iota_{ni}} \sum_{n=1}^N \sum_{i=1}^D \iota_{ni} \{ (x_{ni} - \mu_{\text{ML}, i})^2 - 2 \mathbb{E}[\mathbf{z}_n]^\text{T} \mathbf{w}_i^\text{new} (x_{ni} - \mu_{\text{ML}, i}) + \text{Tr}(\mathbb{E}[\mathbf{z}_n \mathbf{z}_n^\text{T}] \mathbf{w}_i^\text{new} (\mathbf{w}_i^\text{new})^\text{T}) \}
 ```
 
