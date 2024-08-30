@@ -12,7 +12,7 @@ class PPCA:
     that the values are missing at random.
 
       p(z) = N(0, I)
-    p(x|z) = N(W_ z + mean_, noise_variance_ I)
+    p(x|z) = N(W.T @ z + mean, noise_variance * I)
 
 
     Attributes:
