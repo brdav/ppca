@@ -92,9 +92,7 @@ class PPCA:
         self.min_iter = min_iter
         self.rtol = rtol
         self.verbose = verbose
-
-        if random_state is not None:
-            np.random.seed(random_state)
+        self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: np.ndarray):
         """Maximum likelihood estimation of model parameters using
@@ -290,9 +288,9 @@ class PPCA:
         sig2 : (float)
             variance parameter
         """
-        W = np.random.randn(self.n_features_in_, self.n_components_)
+        W = self.rng.randn(self.n_features_in_, self.n_components_)
         mu = np.nanmean(X, axis=1)
-        sig2 = np.random.randn()
+        sig2 = self.rng.randn()
         nll = np.inf
 
         Xc = X - mu[:, None]
